@@ -1,0 +1,189 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String              @id @default(cuid())
+  email              String              @unique
+  name               String?
+  image              String?
+  emailVerified      DateTime?
+  linkedIn           String?
+  github             String?
+  portfolio          String?
+  preferredRoles     String[]
+  preferredCompanies String[]
+  experience         String?
+  skills             String[]
+  resumes            Resume[]
+  interviews         Interview[]
+  analytics          Analytics[]
+  notifications      Notification[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+}
+
+model Resume {
+  id                 String      @id @default(cuid())
+  userId             String
+  user               User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fileUrl            String
+  extractedText      String
+  professionalSummary String?
+  score              Int
+  atsScore           Int
+  keywordMatch       Int
+  strengths          String[]
+  weaknesses         String[]
+  missingSkills      String[]
+  missingKeywords    String[]
+  suggestions        String[]
+  recommendedProjects String[]
+  certifications     String[]
+  createdAt          DateTime    @default(now())
+  interviews         Interview[]
+}
+
+model Interview {
+  id              String          @id @default(cuid())
+  userId          String
+  resumeId        String?
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resume          Resume?         @relation(fields: [resumeId], references: [id], onDelete: SetNull)
+  role            String
+  company         String?
+  difficulty      String
+  type            String
+  technologies    String[]
+  focus           String?
+  status          InterviewStatus @default(DRAFT)
+  estimatedMinutes Int
+  questions       Question[]
+  transcripts     Transcript[]
+  feedback        Feedback?
+  communication   CommunicationAnalysis?
+  readiness       JobReadiness?
+  recordingUrl    String?
+  favorite        Boolean         @default(false)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+}
+
+model Question {
+  id          String    @id @default(cuid())
+  interviewId String
+  interview  Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  prompt      String
+  category    String
+  expectedSkills String[]
+  order       Int
+}
+
+model Transcript {
+  id          String    @id @default(cuid())
+  interviewId String
+  interview  Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  speaker     Speaker
+  text        String
+  startedAt   DateTime
+  endedAt     DateTime?
+  confidence  Float?
+}
+
+model Feedback {
+  id                String    @id @default(cuid())
+  interviewId       String    @unique
+  interview         Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  overallScore      Int
+  technical         Int
+  behavioral        Int
+  communication     Int
+  confidence        Int
+  leadership        Int
+  problemSolving    Int
+  strengths         String[]
+  weaknesses        String[]
+  explanation       String
+  actionItems       String[]
+  resources         String[]
+  nextDifficulty    String
+  createdAt         DateTime  @default(now())
+}
+
+model CommunicationAnalysis {
+  id              String    @id @default(cuid())
+  interviewId     String    @unique
+  interview       Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  confidence      Int
+  clarity         Int
+  vocabulary      Int
+  grammar         Int
+  speakingSpeed   Int
+  professionalism Int
+  fluency         Int
+  fillerWords     Int
+  answerStructure Int
+  listening       Int
+  eyeContact      Int?
+  overallScore    Int
+  suggestions     String[]
+}
+
+model JobReadiness {
+  id              String    @id @default(cuid())
+  interviewId     String    @unique
+  interview       Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  score           Int
+  recommendation  String
+  roleMatch       Int
+  technicalSkills Int
+  communication   Int
+  projects        Int
+  confidence      Int
+  behavioral      Int
+  consistency     Int
+  companies       String[]
+  suggestions     String[]
+}
+
+model Analytics {
+  id                  String   @id @default(cuid())
+  userId              String
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date                DateTime
+  interviewScore      Int
+  communicationScore  Int
+  readinessScore      Int
+  resumeScore         Int
+  practiceMinutes     Int
+  weakAreas           String[]
+  strongAreas         String[]
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  body      String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+enum InterviewStatus {
+  DRAFT
+  SCHEDULED
+  ACTIVE
+  COMPLETED
+  ARCHIVED
+}
+
+enum Speaker {
+  AI
+  USER
+}
